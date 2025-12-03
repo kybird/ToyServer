@@ -1,0 +1,30 @@
+# Build directories
+bin/
+lib/
+x64/
+build/
+out/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+*.cmake
+!CMakeLists.txt
+
+# Visual Studio generated files
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.sdf
+*.opensdf
+*.suo
+*.dir/
+
+# OS generated files
+.DS_Store
+Thumbs.db
