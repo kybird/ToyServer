@@ -1,6 +1,7 @@
 project(GameFramework)
 
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 add_library(GameFramework STATIC
 
@@ -15,6 +16,7 @@ add_library(GameFramework STATIC
     Network/RecvBuffer.cpp
     Network/SessionManager.cpp
     Config/JsonConfigLoader.cpp
+    Logger/Logger.cpp
     # Add other sources as they are implemented
 )
 
@@ -22,7 +24,7 @@ target_include_directories(GameFramework PUBLIC
     .
 )
 
-target_link_libraries(GameFramework PUBLIC asio::asio nlohmann_json::nlohmann_json)
+target_link_libraries(GameFramework PUBLIC asio::asio nlohmann_json::nlohmann_json spdlog::spdlog)
 
 if(MSVC)
     target_compile_options(GameFramework PRIVATE /W4 /WX /utf-8)

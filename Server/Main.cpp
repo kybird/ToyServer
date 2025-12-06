@@ -9,6 +9,7 @@
 #include "RedisDatabase.h"
 #include "Repository/PlayerRepository.h"
 #include "Config/JsonConfigLoader.h"
+#include "Logger/Logger.h"
 #include "Protobuf/ProtobufPacket.h"
 #include "Game.pb.h"
 
@@ -25,7 +26,7 @@ void Handle_C_LOGIN_PROTO(std::shared_ptr<Session> session, const char* buffer, 
 
     GameServer::Packet::C_LOGIN_PROTO pkt;
     if (pkt.ParseFromArray(payload, payloadSize)) {
-        std::cout << "[Protobuf] Login Request: " << pkt.username() << "/" << pkt.password() << std::endl;
+        LogInfo("[Protobuf] Login Request: {}/{}", pkt.username(), pkt.password());
 
         // Send Response
         GameServer::Packet::S_LOGIN_RES_PROTO resPkt;
@@ -48,7 +49,7 @@ void Handle_C_LOGIN_PROTO(std::shared_ptr<Session> session, const char* buffer, 
 
         session->Send(sendBuffer);
     } else {
-        std::cout << "[Protobuf] Failed to parse C_LOGIN_PROTO" << std::endl;
+        LogError("[Protobuf] Failed to parse C_LOGIN_PROTO");
     }
 }
 
@@ -57,19 +58,20 @@ void Handle_C_LOGIN_PROTO(std::shared_ptr<Session> session, const char* buffer, 
 // Test Packet
 struct TestPacket {
     int x;
-    TestPacket(int val) : x(val) { std::cout << "TestPacket Constructed: " << x << std::endl; }
-    ~TestPacket() { std::cout << "TestPacket Destructed: " << x << std::endl; }
+    TestPacket(int val) : x(val) { LogInfo("TestPacket Constructed: {}", x); }
+    ~TestPacket() { LogInfo("TestPacket Destructed: {}", x); }
 };
 
 void TestPacketFactory() {
-    std::cout << "--- Packet Factory Test Start ---\n";
+    LogInfo("--- Packet Factory Test Start ---");
     
     // 1. Create packet A
     void* addrA = nullptr;
     {
+
         auto packetA = GameServer::Framework::Packet::IPacketFactory::CreatePacket<TestPacket>(10);
         addrA = packetA.get();
-        std::cout << "Packet A Address: " << addrA << ", Value: " << packetA->x << std::endl;
+        LogInfo("Packet A Address: {}, Value: {}", addrA, packetA->x);
         // Scope ends, packetA destroyed and returned to pool
     }
 
@@ -78,39 +80,39 @@ void TestPacketFactory() {
     {
         auto packetB = GameServer::Framework::Packet::IPacketFactory::CreatePacket<TestPacket>(20);
         addrB = packetB.get();
-        std::cout << "Packet B Address: " << addrB << ", Value: " << packetB->x << std::endl;
+        LogInfo("Packet B Address: {}, Value: {}", addrB, packetB->x);
 
         if (addrA == addrB) {
-            std::cout << "SUCCESS: Memory Reused!" << std::endl;
+            LogInfo("SUCCESS: Memory Reused!");
         } else {
-            std::cout << "FAILURE: Memory NOT Reused!" << std::endl;
+            LogError("FAILURE: Memory NOT Reused!");
         }
     }
 
-    std::cout << "--- Packet Factory Test End ---\n";
+    LogInfo("--- Packet Factory Test End ---");
 }
 
 int main() {
     try {
+        GameServer::Utils::Logger::Init();
+
         // Run verification
         TestPacketFactory();
 
         // ASCII Art Banner
-        std::cout << R"(
+        LogInfo(R"(
 ___ ____ _   _ ____ ____ ____ _  _ ____ ____ 
  |  |  |  \_/  [__  |___ |__/ |  | |___ |__/ 
  |  |__|   |   ___] |___ |  \  \/  |___ |  \ 
-)" << std::endl;
-        std::cout << "=============================================" << std::endl;
-        std::cout << "Starting Game Server..." << std::endl;
-        std::cout.flush();
-
-        std::cout << "Loading configuration..." << std::endl;
-        std::cout.flush();
+)
+=============================================
+Starting Game Server...
+)");
+ 
+        LogInfo("Loading configuration...");
         JsonConfigLoader loader;
         ServerConfig config = loader.Load("ServerConfig.json");
-        std::cout << "Loaded Config - Port: " << config.server.port << ", Threads: " << config.server.threadCount << std::endl;
-        std::cout.flush();
+        LogInfo("Loaded Config - Port: {}, Threads: {}", config.server.port, config.server.threadCount);
 
     // Database & Repository Setup
     auto db = std::make_shared<MySQLDatabase>();
@@ -123,8 +125,8 @@ ___ ____ _   _ ____ ____ ____ _  _ ____ ____
 
         // Test Find
         auto foundPlayer = playerRepo->Find(1);
-        if (foundPlayer) {
-            std::cout << "Found Player: " << foundPlayer->name << std::endl;
+                if (foundPlayer) {
+            LogInfo("Found Player: {}", foundPlayer->name);
         }
     }
 
@@ -139,7 +141,7 @@ ___ ____ _   _ ____ ____ ____ _  _ ____ ____
     auto redisDb = std::make_shared<RedisDatabase>();
     if (redisDb->Connect(config.database.redis.ToConvertionalString())) {
         redisDb->Set("player:1", "RedisUser");
-        std::cout << "Redis Get: " << redisDb->Get("player:1") << std::endl;
+        LogInfo("Redis Get: {}", redisDb->Get("player:1"));
     }
 
 
@@ -158,7 +160,7 @@ ___ ____ _   _ ____ ____ ____ _  _ ____ ____
 
     auto timerManager = service.GetTimerManager();
     timerManager->ScheduleRepeat(std::chrono::seconds(5), []() {
-        std::cout << "[Timer] 5 seconds tick!" << std::endl;
+        LogInfo("[Timer] 5 seconds tick!");
     });
 
     service.Start(); // This runs io_context.run() in threads
@@ -169,10 +171,10 @@ ___ ____ _   _ ____ ____ ____ _  _ ____ ____
     }
 
     } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        LogError("Exception: {}", e.what());
         return 1;
     } catch (...) {
-        std::cerr << "Unknown exception occurred!" << std::endl;
+        LogError("Unknown exception occurred!");
         return 1;
     }
 

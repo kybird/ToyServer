@@ -1,4 +1,5 @@
 #include "RedisDatabase.h"
+#include "Logger/Logger.h"
 #include <iostream>
 
 namespace GameServer::Database {
@@ -8,16 +9,16 @@ bool RedisDatabase::Connect(const std::string& connectionString) {
     try {
         _redis = std::make_unique<sw::redis::Redis>(connectionString);
         _redis->ping();  // 실제 연결 검증
-        std::cout << "Connected to Redis!" << std::endl;
+        LogInfo("Connected to Redis!");
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "Redis Connection Failed: " << e.what() << std::endl;
+        LogWarn("Redis Connection Failed: {}", e.what());
         _redis.reset(); // Ensure pointer is null on failure
         return false;
     }
 #else
     (void)connectionString;
-    std::cout << "[Mock] Connected to Redis (Library not linked)" << std::endl;
+    LogInfo("[Mock] Connected to Redis (Library not linked)");
     return true;
 #endif
 }
@@ -34,12 +35,12 @@ void RedisDatabase::Set(const std::string& key, const std::string& value) {
     try {
         _redis->set(key, value);
     } catch (const std::exception& e) {
-        std::cerr << "Redis Set Failed: " << e.what() << std::endl;
+        LogError("Redis Set Failed: {}", e.what());
     }
 #else
     (void)key;
     (void)value;
-    std::cout << "[Mock] Redis SET " << key << " = " << value << std::endl;
+    LogInfo("[Mock] Redis SET {} = {}", key, value);
 #endif
 }
 
@@ -50,11 +51,11 @@ std::string RedisDatabase::Get(const std::string& key) {
         auto val = _redis->get(key);
         return val ? *val : "";
     } catch (const std::exception& e) {
-        std::cerr << "Redis Get Failed: " << e.what() << std::endl;
+        LogError("Redis Get Failed: {}", e.what());
         return "";
     }
 #else
-    std::cout << "[Mock] Redis GET " << key << std::endl;
+    LogInfo("[Mock] Redis GET {}: MockValue", key);
     return "MockValue";
 #endif
 }

@@ -1,4 +1,5 @@
 #include "Config/JsonConfigLoader.h"
+#include "Logger/Logger.h"
 #include <iostream>
 
 namespace GameServer::Config {
@@ -16,7 +17,7 @@ ServerConfig JsonConfigLoader::Load(const std::string& path) {
 
     std::ifstream file(path);
     if (!file.is_open()) {
-        std::cerr << "[JsonConfigLoader] Failed to open config file: " << path << ". Using defaults." << std::endl;
+        LogWarn("[JsonConfigLoader] Failed to open config file: {}. Using defaults.", path);
         return config;
     }
 
@@ -47,10 +48,10 @@ ServerConfig JsonConfigLoader::Load(const std::string& path) {
             if (db.contains("Redis")) parseDB(db["Redis"], config.database.redis, 6379);
         }
 
-        std::cout << "[JsonConfigLoader] Config loaded successfully." << std::endl;
+        LogInfo("[JsonConfigLoader] Config loaded successfully.");
 
     } catch (const std::exception& e) {
-        std::cerr << "[JsonConfigLoader] JSON Parsing Error: " << e.what() << std::endl;
+        LogError("[JsonConfigLoader] JSON Parsing Error: {}", e.what());
     }
 
     return config;

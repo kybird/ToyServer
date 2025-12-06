@@ -1,4 +1,5 @@
 #include "MySQLDatabase.h"
+#include "Logger/Logger.h"
 #include <iostream>
 
 namespace GameServer::Database {
@@ -20,15 +21,15 @@ bool MySQLDatabase::Connect(const std::string& connectionString) {
     // In reality, we'd parse this properly.
     (void)connectionString; // Suppress unused warning for now
     if (mysql_real_connect(_conn, "localhost", "root", "password", "game", 0, nullptr, 0)) {
-        std::cout << "Connected to MySQL!" << std::endl;
+        LogInfo("Connected to MySQL!");
         return true;
     } else {
-        std::cerr << "MySQL Connection Failed: " << mysql_error(_conn) << std::endl;
+        LogWarn("MySQL Connection Failed: {}", mysql_error(_conn));
         return false;
     }
 #else
     (void)connectionString;
-    std::cout << "[Mock] Connected to MySQL (Library not linked)" << std::endl;
+    LogInfo("[Mock] Connected to MySQL (Library not linked)");
     return true;
 #endif
 }
@@ -45,12 +46,12 @@ void MySQLDatabase::Disconnect() {
 bool MySQLDatabase::Execute(const std::string& query) {
 #ifdef HAS_MYSQL
     if (mysql_query(_conn, query.c_str())) {
-        std::cerr << "MySQL Query Failed: " << mysql_error(_conn) << std::endl;
+        LogError("MySQL Query Failed: {}", mysql_error(_conn));
         return false;
     }
     return true;
 #else
-    std::cout << "[Mock] Executing Query: " << query << std::endl;
+    LogInfo("[Mock] Executing Query: {}", query);
     return true;
 #endif
 }

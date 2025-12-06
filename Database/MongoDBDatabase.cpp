@@ -1,4 +1,5 @@
 #include "MongoDBDatabase.h"
+#include "Logger/Logger.h"
 #include <iostream>
 
 namespace GameServer::Database {
@@ -20,15 +21,15 @@ bool MongoDBDatabase::Connect(const std::string& connectionString) {
         admin.run_command(bsoncxx::builder::basic::make_document(
             bsoncxx::builder::basic::kvp("ping", 1)));
         _db = (*_client)["game_db"];
-        std::cout << "Connected to MongoDB!" << std::endl;
+        LogInfo("Connected to MongoDB!");
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "MongoDB Connection Failed: " << e.what() << std::endl;
+        LogWarn("MongoDB Connection Failed: {}", e.what());
         _client.reset();
         return false;
     }
 #else
-    std::cout << "[Mock] Connected to MongoDB (Library not linked)" << std::endl;
+    LogInfo("[Mock] Connected to MongoDB (Library not linked)");
     return true;
 #endif
 }
@@ -49,7 +50,7 @@ void MongoDBDatabase::InsertOne(const std::string& collection, const std::string
 #else
     (void)collection;
     (void)json;
-    std::cout << "[Mock] MongoDB InsertOne into " << collection << ": " << json << std::endl;
+    LogInfo("[Mock] MongoDB InsertOne into {}: {}", collection, json);
 #endif
 }
 
