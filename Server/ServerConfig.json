@@ -1,6 +1,25 @@
 {
-    "serverPort": 4242,
-    "mysqlConnectionString": "tcp://127.0.0.1:3306",
-    "mongoConnectionString": "mongodb://localhost:27017",
-    "redisConnectionString": "tcp://127.0.0.1:6379"
+    "Server": {
+        "IP": "0.0.0.0",
+        "Port": 9090,
+        "ThreadCount": 8,
+        "MaxSession": 2000
+    },
+    "Database": {
+        "MySQL": {
+            "Host": "localhost",
+            "User": "ToyUser",
+            "PW": "ToyPassword",
+            "DBName": "ToyGame",
+            "Port": 3306
+        },
+        "Mongo": {
+            "Host": "localhost",
+            "Port": 27017
+        },
+        "Redis": {
+            "Host": "127.0.0.1",
+            "Port": 6379
+        }
+    }
 }

@@ -1,5 +1,7 @@
 project(GameFramework)
 
+find_package(nlohmann_json CONFIG REQUIRED)
+
 add_library(GameFramework STATIC
 
     Network/Service.cpp
@@ -12,6 +14,7 @@ add_library(GameFramework STATIC
     Dispatcher/IDispatcher.h
     Network/RecvBuffer.cpp
     Network/SessionManager.cpp
+    Config/JsonConfigLoader.cpp
     # Add other sources as they are implemented
 )
 
@@ -19,7 +22,7 @@ target_include_directories(GameFramework PUBLIC
     .
 )
 
-target_link_libraries(GameFramework PUBLIC asio::asio)
+target_link_libraries(GameFramework PUBLIC asio::asio nlohmann_json::nlohmann_json)
 
 if(MSVC)
     target_compile_options(GameFramework PRIVATE /W4 /WX /utf-8)

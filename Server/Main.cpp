@@ -8,7 +8,7 @@
 #include "MongoDBDatabase.h"
 #include "RedisDatabase.h"
 #include "Repository/PlayerRepository.h"
-#include "Config/ConfigLoader.h"
+#include "Config/JsonConfigLoader.h"
 #include "Protobuf/ProtobufPacket.h"
 #include "Game.pb.h"
 
@@ -105,16 +105,16 @@ ___ ____ _   _ ____ ____ ____ _  _ ____ ____
         std::cout << "Starting Game Server..." << std::endl;
         std::cout.flush();
 
-        // Load Configuration
         std::cout << "Loading configuration..." << std::endl;
         std::cout.flush();
-        ServerConfig config = ConfigLoader::Load("ServerConfig.json");
-        std::cout << "Loaded Config - Port: " << config.serverPort << std::endl;
+        JsonConfigLoader loader;
+        ServerConfig config = loader.Load("ServerConfig.json");
+        std::cout << "Loaded Config - Port: " << config.server.port << ", Threads: " << config.server.threadCount << std::endl;
         std::cout.flush();
 
     // Database & Repository Setup
     auto db = std::make_shared<MySQLDatabase>();
-    if (db->Connect(config.mysqlConnectionString)) {
+    if (db->Connect(config.database.mysql.ToConvertionalString())) {
         auto playerRepo = std::make_shared<PlayerRepository>(db);
         
         // Test Save
@@ -128,15 +128,16 @@ ___ ____ _   _ ____ ____ ____ _  _ ____ ____
         }
     }
 
+
     // MongoDB Test
     auto mongoDb = std::make_shared<MongoDBDatabase>();
-    if (mongoDb->Connect(config.mongoConnectionString)) {
+    if (mongoDb->Connect(config.database.mongo.ToConvertionalString())) {
         mongoDb->InsertOne("players", "{ \"id\": 1, \"name\": \"MongoUser\" }");
     }
 
     // Redis Test
     auto redisDb = std::make_shared<RedisDatabase>();
-    if (redisDb->Connect(config.redisConnectionString)) {
+    if (redisDb->Connect(config.database.redis.ToConvertionalString())) {
         redisDb->Set("player:1", "RedisUser");
         std::cout << "Redis Get: " << redisDb->Get("player:1") << std::endl;
     }
@@ -146,13 +147,13 @@ ___ ____ _   _ ____ ____ ____ _  _ ____ ____
     dispatcher->RegisterHandler(PacketID::C_LOGIN, ClientPacketHandler::HandlePacket);
     dispatcher->RegisterHandler(PacketID::PKT_C_LOGIN_PROTO, Handle_C_LOGIN_PROTO);
 
-    Service service(4); // Use 4 threads (1 IO + 4 Logic)
+    Service service(config.server.threadCount); // Use Config ThreadCount
     
     auto sessionFactory = [&service, dispatcher](asio::io_context& ioContext) {
         return std::make_shared<PacketSession>(ioContext, dispatcher, service.GetThreadPool(), service.GetPacketCipher());
     };
 
-    Listener listener(service.GetIOContext(), config.serverPort, sessionFactory);
+    Listener listener(service.GetIOContext(), config.server.port, sessionFactory);
     listener.Start();
 
     auto timerManager = service.GetTimerManager();

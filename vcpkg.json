@@ -9,6 +9,7 @@
         "libmysql",
         "mongo-cxx-driver",
         "protobuf",
-        "gperftools"
+        "gperftools",
+        "nlohmann-json"
     ]
 }
