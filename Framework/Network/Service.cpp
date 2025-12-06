@@ -2,6 +2,7 @@
 #include "Thread/ThreadPool.h"
 #include "Timer/AsioTimerManager.h"
 #include "Security/BasicXORCipher.h"
+#include <chrono>
 
 namespace GameServer::Network {
 
@@ -28,6 +29,15 @@ void Service::Start() {
     });
 
     _threadPool->Start(_threadCount);
+
+    // Schedule Heartbeat Check
+    if (_timerManager) {
+        _timerManager->ScheduleRepeat(std::chrono::seconds(5), []() {
+            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+            // 10초 타임아웃 설정 (테스트를 위해 짧게)
+            SessionManager::Instance().CheckHeartbeat(now, 10000);
+        });
+    }
 }
 
 void Service::Stop() {

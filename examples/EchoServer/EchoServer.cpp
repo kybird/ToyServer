@@ -4,6 +4,7 @@
 #include "Network/Service.h"
 #include "Network/Listener.h"
 #include "Network/Session.h"
+#include "Network/SessionManager.h"
 
 using namespace GameServer::Network;
 
@@ -20,13 +21,14 @@ protected:
         std::cout << "Client Disconnected" << std::endl;
     }
 
-    size_t OnRecv(const uint8_t* buffer, size_t len) override {
-        std::string msg(reinterpret_cast<const char*>(buffer), len);
+    size_t OnRecv(RecvBuffer& buffer) override {
+        size_t len = buffer.DataSize();
+        std::string msg(reinterpret_cast<const char*>(buffer.ReadPos()), len);
         std::cout << "Received: " << msg << std::endl;
         
         // Echo back
         Send(msg);
-        return len;
+        return len; // Processed all
     }
 };
 
@@ -43,7 +45,8 @@ int main() {
         std::cout << "EchoServer started on port 8080..." << std::endl;
         
         while (true) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            std::cout << "Current Sessions: " << SessionManager::Instance().GetSessionCount() << std::endl;
         }
 
         service.Stop();

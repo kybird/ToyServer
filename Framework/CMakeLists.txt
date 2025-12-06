@@ -10,6 +10,8 @@ add_library(GameFramework STATIC
     Security/BasicXORCipher.cpp
     Dispatcher/DefaultDispatcher.h
     Dispatcher/IDispatcher.h
+    Network/RecvBuffer.cpp
+    Network/SessionManager.cpp
     # Add other sources as they are implemented
 )
 

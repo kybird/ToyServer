@@ -23,8 +23,9 @@ protected:
         std::cout << "Disconnected from EchoServer" << std::endl;
     }
 
-    size_t OnRecv(const uint8_t* buffer, size_t len) override {
-        std::string msg(reinterpret_cast<const char*>(buffer), len);
+    size_t OnRecv(RecvBuffer& buffer) override {
+        size_t len = buffer.DataSize();
+        std::string msg(reinterpret_cast<const char*>(buffer.ReadPos()), len);
         std::cout << "Received: " << msg << std::endl;
         return len;
     }

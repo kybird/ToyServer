@@ -7,6 +7,7 @@
 #include "Thread/IThreadPool.h"
 #include "Timer/ITimerManager.h"
 #include "Packet/IPacketCipher.h"
+#include "Network/SessionManager.h"
 
 namespace GameServer::Network {
 
@@ -22,6 +23,7 @@ public:
     std::shared_ptr<Framework::IThreadPool> GetThreadPool();
     std::shared_ptr<Framework::ITimerManager> GetTimerManager();
     std::shared_ptr<GameServer::Packet::IPacketCipher> GetPacketCipher();
+    SessionManager& GetSessionManager() { return SessionManager::Instance(); }
 
 private:
     asio::io_context _ioContext;
