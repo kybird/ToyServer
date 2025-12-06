@@ -34,7 +34,7 @@ protected:
 int main() {
     try {
         Service service(1);
-        auto session = std::make_shared<EchoClientSession>(service.GetIOContext());
+        auto session = std::make_shared<EchoClientSession>(service.GetIOContext(), nullptr);
 
         asio::ip::tcp::endpoint endpoint(asio::ip::address::from_string("127.0.0.1"), 8080);
         session->GetSocket().async_connect(endpoint,

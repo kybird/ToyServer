@@ -2,6 +2,7 @@
 #include "Network/Service.h"
 #include "Network/Listener.h"
 #include "Network/PacketSession.h"
+#include "Network/GameSession.h"
 #include "Dispatcher/DefaultDispatcher.h"
 #include "Packet/ClientPacketHandler.h"
 #include "MySQLDatabase.h"
@@ -15,9 +16,33 @@
 
 using namespace GameServer::Network;
 using namespace GameServer::Packet;
+using namespace GameServer::Packet;
 using namespace GameServer::Database;
 using namespace GameServer::Repository;
 using namespace GameServer::Config;
+using namespace GameServer::GameShared; // For GameSession
+
+void Handle_C_PONG(std::shared_ptr<Session> /*session*/, const char* /*buffer*/, uint16_t /*size*/) {
+    // Just receiving this updates LastRecvTime in Session
+    // LogInfo("Pong received");
+}
+
+void Handle_S_PING(std::shared_ptr<Session> session, const char* /*buffer*/, uint16_t /*size*/) {
+    // Client sent a Ping (keep-alive)
+    // We can reply with Pong if we want strict Ping-Pong, but just receiving is enough for timeout reset.
+    // For symmetry, let's reply with Pong? No, S_PING is defined as empty.
+    // Let's just acknowledge it.
+    // LogInfo("Client Ping received");
+    
+    // Optional: Reply with Pong so Client knows we are alive immediately?
+    // The Client's OnPing replies with Pong.
+    // If we reply with Pong (C_PONG 1004)... Client doesn't handle 1004?
+    // Client doesn't register C_PONG. It registers S_PING.
+    // So if Server sends C_PONG (1004) to Client, Client will say "Unknown Packet ID 1004".
+    // So we should NOT send C_PONG to Client unless Client handles it.
+    // Client only handles S_PING (1003).
+    // So we should just accept the packet and do nothing (LastRecvTime is already updated).
+}
 
 void Handle_C_LOGIN_PROTO(std::shared_ptr<Session> session, const char* buffer, uint16_t size) {
     // Skip header
@@ -148,11 +173,13 @@ Starting Game Server...
     auto dispatcher = std::make_shared<GameServer::Framework::DefaultDispatcher>();
     dispatcher->RegisterHandler(PacketID::C_LOGIN, ClientPacketHandler::HandlePacket);
     dispatcher->RegisterHandler(PacketID::PKT_C_LOGIN_PROTO, Handle_C_LOGIN_PROTO);
+    dispatcher->RegisterHandler(PacketID::C_PONG, Handle_C_PONG);
+    dispatcher->RegisterHandler(PacketID::S_PING, Handle_S_PING);
 
     Service service(config.server.threadCount); // Use Config ThreadCount
     
     auto sessionFactory = [&service, dispatcher](asio::io_context& ioContext) {
-        return std::make_shared<PacketSession>(ioContext, dispatcher, service.GetThreadPool(), service.GetPacketCipher());
+        return std::make_shared<GameSession>(ioContext, dispatcher, service.GetTimerManager(), service.GetThreadPool(), service.GetPacketCipher());
     };
 
     Listener listener(service.GetIOContext(), config.server.port, sessionFactory);

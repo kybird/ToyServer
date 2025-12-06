@@ -2,6 +2,7 @@
 #include "Network/Service.h"
 #include "Network/Session.h"
 #include "Network/PacketSession.h"
+#include "Network/GameSession.h"
 #include "Packet/PacketHeader.h"
 #include "Dispatcher/DefaultDispatcher.h"
 #include "Packet/ClientPacketHandler.h"
@@ -10,6 +11,10 @@
 
 using namespace GameServer::Network;
 using namespace GameServer::Packet;
+// using namespace GameServer::GameShared; // No, let's explicit or add correct one.
+// The file has GameServer::Packet. 
+// Let's add:
+using namespace GameServer::GameShared;
 
 void OnLoginResponse(std::shared_ptr<Session> session, const char* buffer, uint16_t size) {
     std::vector<uint8_t> vecBuffer(buffer, buffer + size);
@@ -27,8 +32,24 @@ void OnLoginResponseProto(std::shared_ptr<Session> session, const char* buffer, 
 
     GameServer::Packet::S_LOGIN_RES_PROTO pkt;
     if (pkt.ParseFromArray(payload, payloadSize)) {
-        std::cout << "[Protobuf] Login Result: " << (pkt.success() ? "Success" : "Failed") << ", PlayerID: " << pkt.player_id() << std::endl;
+    std::cout << "[Protobuf] Login Result: " << (pkt.success() ? "Success" : "Failed") << ", PlayerID: " << pkt.player_id() << std::endl;
     }
+}
+
+void OnPing(std::shared_ptr<Session> session, const char* /*buffer*/, uint16_t /*size*/) {
+    // Reply with Pong
+    PKT_C_PONG pongPkt;
+    auto sendBuffer = ClientPacketHandler::MakeSendBuffer(PacketID::C_PONG, pongPkt);
+    session->Send(sendBuffer);
+    std::cout << "Ping received, Pong sent" << std::endl;
+}
+
+void OnDisconnect(std::shared_ptr<Session> session, const char* /*buffer*/, uint16_t /*size*/) {
+    std::cout << "Server requested Disconnect. Closing connection..." << std::endl;
+    session->ForceDisconnect(); // Client side can just force close or use Graceful but we are client.
+    // Actually we should just close socket.
+    // If we use ForceDisconnect, it sends RST/FIN.
+    std::exit(0); // For simple client demo, just exit?
 }
 
 int main() {
@@ -37,11 +58,13 @@ int main() {
     auto dispatcher = std::make_shared<GameServer::Framework::DefaultDispatcher>();
     dispatcher->RegisterHandler(PacketID::S_LOGIN_RES, OnLoginResponse);
     dispatcher->RegisterHandler(PacketID::PKT_S_LOGIN_RES_PROTO, OnLoginResponseProto);
+    dispatcher->RegisterHandler(PacketID::S_PING, OnPing);
+    dispatcher->RegisterHandler(PacketID::S_DISCONNECT, OnDisconnect);
 
     Service service(1);
-    auto session = std::make_shared<PacketSession>(service.GetIOContext(), dispatcher, service.GetThreadPool(), service.GetPacketCipher());
+    auto session = std::make_shared<GameSession>(service.GetIOContext(), dispatcher, service.GetTimerManager(), service.GetThreadPool(), service.GetPacketCipher());
 
-    asio::ip::tcp::endpoint endpoint(asio::ip::address::from_string("127.0.0.1"), 4242);
+    asio::ip::tcp::endpoint endpoint(asio::ip::address::from_string("127.0.0.1"), 9090);
     session->GetSocket().async_connect(endpoint,
         [session](std::error_code ec) {
             if (!ec) {

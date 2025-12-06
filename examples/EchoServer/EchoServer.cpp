@@ -36,7 +36,7 @@ int main() {
     try {
         Service service(2);
         Listener listener(service.GetIOContext(), 8080, [](asio::io_context& io) {
-            return std::make_shared<EchoSession>(io);
+            return std::make_shared<EchoSession>(io, nullptr);
         });
 
         listener.Start();

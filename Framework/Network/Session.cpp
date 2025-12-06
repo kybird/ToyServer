@@ -9,8 +9,8 @@ using namespace std::chrono;
 
 namespace GameServer::Network {
 
-Session::Session(asio::io_context& ioContext, std::shared_ptr<Framework::IThreadPool> threadPool)
-    : _socket(ioContext), _threadPool(threadPool), _recvBuffer(65536) {
+Session::Session(asio::io_context& ioContext, std::shared_ptr<Framework::ITimerManager> timerManager, std::shared_ptr<Framework::IThreadPool> threadPool)
+    : _socket(ioContext), _timerManager(timerManager), _threadPool(threadPool), _recvBuffer(65536) {
 }
 
 Session::~Session() {
@@ -33,6 +33,55 @@ void Session::OnConnected() {
 
 void Session::OnDisconnected() {
     // Default implementation
+}
+
+void Session::ForceDisconnect() {
+    if (_disconnected.exchange(true)) return;
+
+    // Force shutdown with LINGER to avoid TIME_WAIT on server
+    try {
+        if (_socket.is_open()) {
+            asio::socket_base::linger option(true, 0); // RST close
+            _socket.set_option(option);
+            
+            _socket.shutdown(asio::ip::tcp::socket::shutdown_both);
+            _socket.close();
+        }
+    } catch (std::exception& e) {
+        std::cerr << "Session ForceDisconnect Error: " << e.what() << std::endl;
+    }
+
+    SessionManager::Instance().Remove(_sessionId);
+    OnDisconnected();
+}
+
+void Session::GracefulDisconnect() {
+    if (_disconnected) return; // Already disconnecting or disconnected
+    // Duplicate check in ForceDisconnect as well, but this is early exit.
+    
+    // 1. Hook for User Packet
+    OnRequestGracefulDisconnect();
+
+    // 2. Schedule Safety ForceDisconnect after 10 seconds
+    if (_timerManager) {
+        auto self(shared_from_this());
+        _timerManager->ScheduleOnce(std::chrono::seconds(10), [self]() {
+            if (!self->_disconnected) {
+                // If still connected (client didn't close), Force it.
+                // Log Info?
+                self->ForceDisconnect();
+            }
+        });
+    } else {
+        // No timer manager? Fallback to force immediatly or risk hanging?
+        // Let's force immediately if no timer manager, as safety.
+        ForceDisconnect();
+    }
+}
+
+void Session::OnRequestGracefulDisconnect() {
+    // Default: just shut it down if user didn't override.
+    ForceDisconnect();
 }
 
 
@@ -115,6 +164,7 @@ void Session::DoWrite() {
                     DoWrite();
                 }
             } else {
+                SessionManager::Instance().Remove(_sessionId);
                 OnDisconnected();
             }
         });

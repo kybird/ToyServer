@@ -79,4 +79,11 @@ size_t SessionManager::GetSessionCount() {
     return _sessions.size();
 }
 
+void SessionManager::DisconnectAll() {
+    std::shared_lock<std::shared_mutex> lock(_lock);
+    for (auto& session : _sessions) {
+        session.second->ForceDisconnect();
+    }
+}
+
 }

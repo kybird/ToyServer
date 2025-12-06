@@ -17,6 +17,7 @@ public:
     void Broadcast(const std::vector<uint8_t>& buffer);
     std::shared_ptr<Session> Find(uint32_t sessionId);
     void CheckHeartbeat(uint64_t now, uint64_t timeoutInterval);
+    void DisconnectAll();
     size_t GetSessionCount();
 
     static SessionManager& Instance() {

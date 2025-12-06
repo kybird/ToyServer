@@ -12,6 +12,9 @@ enum PacketID : uint16_t {
     S_LOGIN_RES = 1002,
     PKT_C_LOGIN_PROTO = 2001,
     PKT_S_LOGIN_RES_PROTO = 2002,
+    S_PING = 1003,
+    C_PONG = 1004,
+    S_DISCONNECT = 1005,
 };
 
 struct PKT_C_LOGIN {
@@ -38,6 +41,21 @@ struct PKT_S_LOGIN_RES {
     void Read(PacketStream& stream) {
         stream >> success >> playerId;
     }
+};
+
+struct PKT_S_PING {
+    void Write(PacketStream& /*stream*/) {}
+    void Read(PacketStream& /*stream*/) {}
+};
+
+struct PKT_C_PONG {
+    void Write(PacketStream& /*stream*/) {}
+    void Read(PacketStream& /*stream*/) {}
+};
+
+struct PKT_S_DISCONNECT {
+    void Write(PacketStream& /*stream*/) {}
+    void Read(PacketStream& /*stream*/) {}
 };
 
 class ClientPacketHandler {

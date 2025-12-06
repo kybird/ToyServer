@@ -41,6 +41,7 @@ void Service::Start() {
 }
 
 void Service::Stop() {
+    SessionManager::Instance().DisconnectAll();
     _ioContext.stop();
     for (auto& t : _ioThreads) {
         if (t.joinable()) {

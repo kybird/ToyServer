@@ -6,8 +6,14 @@ namespace GameServer::Network {
 
 Listener::Listener(asio::io_context& ioContext, unsigned short port, SessionFactory sessionFactory)
     : _ioContext(ioContext),
-      _acceptor(ioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)),
+      _acceptor(ioContext),
       _sessionFactory(sessionFactory) {
+    
+    asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), port);
+    _acceptor.open(endpoint.protocol());
+    _acceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
+    _acceptor.bind(endpoint);
+    _acceptor.listen();
 }
 
 Listener::~Listener() {

@@ -2,14 +2,15 @@
 #include "Network/Session.h"
 #include "Dispatcher/IDispatcher.h"
 #include "Thread/IThreadPool.h"
+#include "Timer/ITimerManager.h"
 #include "Packet/IPacketCipher.h"
 
 namespace GameServer::Network {
 
 class PacketSession : public Session {
 public:
-    PacketSession(asio::io_context& ioContext, std::shared_ptr<Framework::IDispatcher> dispatcher, std::shared_ptr<Framework::IThreadPool> threadPool = nullptr, std::shared_ptr<GameServer::Packet::IPacketCipher> cipher = nullptr)
-        : Session(ioContext, threadPool), _dispatcher(dispatcher), _cipher(cipher) {}
+    PacketSession(asio::io_context& ioContext, std::shared_ptr<Framework::IDispatcher> dispatcher, std::shared_ptr<Framework::ITimerManager> timerManager, std::shared_ptr<Framework::IThreadPool> threadPool = nullptr, std::shared_ptr<GameServer::Packet::IPacketCipher> cipher = nullptr)
+        : Session(ioContext, timerManager, threadPool), _dispatcher(dispatcher), _cipher(cipher) {}
 
     virtual void Send(const std::vector<uint8_t>& msg) override {
         if (_cipher) {
