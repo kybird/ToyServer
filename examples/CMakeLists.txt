@@ -1,2 +1,2 @@
-add_executable(EchoServer EchoServer.cpp)
-target_link_libraries(EchoServer PRIVATE GameServerCore)
+add_subdirectory(EchoServer)
+add_subdirectory(EchoClient)

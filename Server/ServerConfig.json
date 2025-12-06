@@ -1,0 +1,6 @@
+{
+    "serverPort": 4242,
+    "mysqlConnectionString": "tcp://127.0.0.1:3306",
+    "mongoConnectionString": "mongodb://localhost:27017",
+    "redisConnectionString": "tcp://127.0.0.1:6379"
+}

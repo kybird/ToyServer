@@ -28,3 +28,6 @@ CPackSourceConfig.cmake
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Dependencies
+vcpkg_installed/

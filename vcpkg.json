@@ -1,0 +1,14 @@
+{
+    "name": "gameserverframework",
+    "version": "0.1.0",
+    "dependencies": [
+        "asio",
+        "hiredis",
+        "redis-plus-plus",
+        "mysql-connector-cpp",
+        "libmysql",
+        "mongo-cxx-driver",
+        "protobuf",
+        "gperftools"
+    ]
+}

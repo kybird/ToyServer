@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package GameServer.Packet;
+
+message C_LOGIN_PROTO {
+    string username = 1;
+    string password = 2;
+}
+
+message S_LOGIN_RES_PROTO {
+    bool success = 1;
+    uint32 player_id = 2;
+}
