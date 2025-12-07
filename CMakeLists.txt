@@ -38,6 +38,5 @@ add_subdirectory(GameShared)
 add_subdirectory(Database)
 add_subdirectory(Module/Protobuf)
 add_subdirectory(Server)
-add_subdirectory(Client)
 add_subdirectory(examples)
 

@@ -10,10 +10,18 @@ Listener::Listener(asio::io_context& ioContext, unsigned short port, SessionFact
       _sessionFactory(sessionFactory) {
     
     asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), port);
+    std::cout << "[Listener] Binding to port: " << port << std::endl;
+    
     _acceptor.open(endpoint.protocol());
     _acceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
-    _acceptor.bind(endpoint);
-    _acceptor.listen();
+    try {
+        _acceptor.bind(endpoint);
+        _acceptor.listen();
+        std::cout << "[Listener] Listening on " << _acceptor.local_endpoint().port() << std::endl;
+    } catch (std::exception& e) {
+        std::cout << "[Listener] Failed to bind/listen: " << e.what() << std::endl;
+        throw;
+    }
 }
 
 Listener::~Listener() {

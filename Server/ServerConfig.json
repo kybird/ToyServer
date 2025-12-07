@@ -1,7 +1,7 @@
 {
     "Server": {
         "IP": "0.0.0.0",
-        "Port": 9090,
+        "Port": 4242,
         "ThreadCount": 8,
         "MaxSession": 2000
     },

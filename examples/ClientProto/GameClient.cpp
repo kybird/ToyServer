@@ -34,11 +34,7 @@ namespace GameClient {
                 }
             });
 
-        // 4. Start Service (blocking if single thread, but usually Service::Start is blocking unless we run it in a thread?
-        // Service::Start calls io_context.run(). If we want to keep main thread free or controll loop, we should check Service impl.
-        // Existing Main.cpp calls service.Start() then loops.
-        // Service::Start() in Framework likely just runs the threads?
-        // Let's assume standard behavior: Service::Start starts the IO threads.
+        // 4. Start Service (Non-blocking, runs IO threads)
         
         _service.Start();
     }

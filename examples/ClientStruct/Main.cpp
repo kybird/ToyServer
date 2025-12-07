@@ -4,7 +4,7 @@
 #include "GameClient.h"
 
 int main() {
-    std::cout << "Starting Game Client..." << std::endl;
+    std::cout << "Starting Game Client (Struct)..." << std::endl;
 
     GameClient::GameClient client("127.0.0.1", 4242, 1);
     client.Start();

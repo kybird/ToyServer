@@ -1,2 +1,4 @@
 add_subdirectory(EchoServer)
 add_subdirectory(EchoClient)
+add_subdirectory(ClientStruct)
+add_subdirectory(ClientProto)
